@@ -1,0 +1,62 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+/*
+    3.5. Se va scrie o funcţie pentru a verifica dacă un şir dat este subşir al unui alt şir de
+    caractere. În caz afirmativ, se va specifica poziţia pe care se regăseşte pentru prima dată
+
+ */
+
+char* read_string() {
+    int size = 8;// Size of the string
+    char* str = malloc(size);  // Pointer to the dynamic string
+    char c;             // Character read from stdin
+    int i = 0;
+    // Read characters from stdin until EOF or newline
+    while ((c = (char)getchar()) != '\n') {
+        // Increase size of string and reallocate memory
+        if (i==size){
+            str = realloc(str, size*2);
+        }
+        if (str == NULL) {
+            // Allocation failed, exit program
+            perror("realloc");
+            exit(1);
+        }
+
+        // Add character to the string
+        str[i++] = c;
+    }
+
+    // Add null character to the end of the string
+    str[i] = '\0';
+    return str;
+}
+
+int isSubString(const char *haystack, const char *needle) {
+    int needle_len = (int)strlen(needle);
+    int index = 0;
+
+    while (*haystack != '\0') {
+        if (strncmp(haystack, needle, needle_len) == 0) {
+            return index;
+        }
+        index++;
+        haystack++;
+    }
+
+    return -1;
+}
+
+int main() {
+    char* str1 = read_string();
+    char* str2 = read_string();
+
+    int where = isSubString(str1, str2);
+    if(where != -1)
+        printf("Yup, it is at index %d\n", where);
+    else
+        printf("Nope\n");
+    return 0;
+}

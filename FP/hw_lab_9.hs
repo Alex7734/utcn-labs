@@ -7,63 +7,45 @@ import Data.Char (isUpper)
 import Data.List (nub, delete)
 import qualified Data.Map as M
 
---------------------------------------------
--- sortRev Implementation
---------------------------------------------
-newtype Rev a = Rev a
+--- 9.9.5
+
+newtype Reverse a = Reverse a
   deriving (Eq, Show)
 
-instance Ord a => Ord (Rev a) where
-  compare (Rev x) (Rev y) = compare y x
+instance Ord a => Ord (Reverse a) where
+  compare (Reverse x) (Reverse y) = compare y x
 
-sortRev :: Ord a => [a] -> [a]
-sortRev = sortOn Rev
+sortDescending :: Ord a => [a] -> [a]
+sortDescending = sortOn Reverse
 
---------------------------------------------
--- allUpper Implementation
---------------------------------------------
-allUpper :: String -> Bool
-allUpper = getAll . foldMap (All . isUpper)
+--- 9.9.6
 
---------------------------------------------
--- Graph Type Class Definition
---------------------------------------------
-class Graph g where
-  neighbors :: Ord a => g a -> a -> [a] 
+allCharactersUpper :: String -> Bool
+allCharactersUpper = getAll . foldMap (All . isUpper)
 
---------------------------------------------
--- TupleGraph Implementation
---------------------------------------------
-newtype TupleGraph a = TupleGraph [(a, a)]
+--- 9.9.7
 
-instance Graph TupleGraph where
-  neighbors (TupleGraph edges) node = [y | (x, y) <- edges, x == node]
+class GraphStructure g where
+  getNeighbors :: Ord a => g a -> a -> [a] 
 
---------------------------------------------
--- NeighborListGraph Implementation
---------------------------------------------
-newtype NeighborListGraph a = NeighborListGraph (M.Map a [a])
+newtype EdgeListGraph a = EdgeListGraph [(a, a)]
 
-instance Graph NeighborListGraph where
-  neighbors (NeighborListGraph adjList) node = M.findWithDefault [] node adjList
+instance GraphStructure EdgeListGraph where
+  getNeighbors (EdgeListGraph edges) node = [y | (x, y) <- edges, x == node]
 
---------------------------------------------
--- Helper Function
---------------------------------------------
-helper :: (Graph g, Ord a) => ([a] -> [a] -> [a]) -> [a] -> g a -> [a] -> [a]
-helper strategy [] _ visited = visited
-helper strategy (current:queue) graph visited
-  | current `elem` visited = helper strategy queue graph visited
-  | otherwise = helper strategy (strategy queue (neighbors graph current)) graph (visited ++ [current])
+newtype AdjacencyListGraph a = AdjacencyListGraph (M.Map a [a])
 
---------------------------------------------
--- Breadth-First Search (BFS)
---------------------------------------------
-bf :: (Graph g, Ord a) => g a -> a -> [a]
-bf graph start = helper (++) [start] graph []
+instance GraphStructure AdjacencyListGraph where
+  getNeighbors (AdjacencyListGraph adjList) node = M.findWithDefault [] node adjList
 
---------------------------------------------
--- Depth-First Search (DFS)
---------------------------------------------
-df :: (Graph g, Ord a) => g a -> a -> [a]
-df graph start = helper (flip (++)) [start] graph []
+graphTraversal :: (GraphStructure g, Ord a) => ([a] -> [a] -> [a]) -> [a] -> g a -> [a] -> [a]
+graphTraversal strategy [] _ visited = visited
+graphTraversal strategy (current:queue) graph visited
+  | current `elem` visited = graphTraversal strategy queue graph visited
+  | otherwise = graphTraversal strategy (strategy queue (getNeighbors graph current)) graph (visited ++ [current])
+
+breadthFirstSearch :: (GraphStructure g, Ord a) => g a -> a -> [a]
+breadthFirstSearch graph start = graphTraversal (++) [start] graph []
+
+depthFirstSearch :: (GraphStructure g, Ord a) => g a -> a -> [a]
+depthFirstSearch graph start = graphTraversal (flip (++)) [start] graph []

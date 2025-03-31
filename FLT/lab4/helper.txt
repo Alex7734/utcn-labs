@@ -1,0 +1,7 @@
+GENERATE:
+
+lex lispParser.l1
+yacc -d lispParser.y
+
+RUN:
+gcc -Wno-implicit-function-declaration -o LISP lex.yy.c y.tab.c -ly -ll
